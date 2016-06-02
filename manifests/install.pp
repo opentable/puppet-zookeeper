@@ -6,84 +6,65 @@
 #
 # Actions: None
 #
-# Requires:
 #
-# Sample Usage: include zookeeper::install
+# Should not be included directly
 #
 class zookeeper::install(
-  $ensure            = $zookeeper::ensure,
-  $install_method    = $zookeeper::install_method,
-  $package_mirror    = $zookeeper::package_mirror,
-  $install_dir       = $zookeeper::install_dir,
-  $snap_retain_count = $zookeeper::snap_retain_count,
-  $cleanup_sh        = $zookeeper::cleanup_sh,
-  $datastore         = $zookeeper::datastore,
-  $user              = $zookeeper::user
+  $install_method    = 'package',
+  $mirror_url        = 'http://mirror.cogentco.com/pub/apache',
+  $install_dir       = '/opt/zookeeper',
+  $package_dir       = '/var/tmp/zookeeper',
+  $ensure            = present,
+  $snap_retain_count = 3,
+  $cleanup_sh        = '/usr/lib/zookeeper/bin/zkCleanup.sh',
+  $datastore         = '/var/lib/zookeeper',
+  $user              = 'zookeeper',
+  $group             = 'zookeeper',
+  $ensure_account    = present,
+  $service_provider  = 'init.d',
+  $ensure_cron       = true,
+  $service_package   = 'zookeeperd',
+  $packages          = ['zookeeper'],
+  $cdhver            = undef,
+  $install_java      = false,
+  $java_package      = undef,
+  $repo              = undef,
+  $manual_clean      = undef,
 ) {
+  anchor { 'zookeeper::install::begin': }
 
-  if ($install_method == 'deb') {
-    package { ['zookeeper']:
-      ensure => $ensure
-    }
+  if ($install_method == 'package') {
 
-    package { ['zookeeperd']:
-      ensure  => $ensure,
-      require => Package['zookeeper']
-    }
+    include '::zookeeper::install::package'
+    $clean = $manual_clean
+
   } else {
-    package { ['zookeeper','zookeeperd']:
-      ensure => absent
+
+    include '::zookeeper::install::archive'
+    if ($manual_clean == undef) {
+      $clean = versioncmp($ensure, '3.4') ? {
+        '-1'    => true,
+        default => false,
+      }
+    } else {
+      $clean = $manual_clean
     }
 
-    file { $install_dir:
-      ensure => link,
-      target => "${install_dir}-${ensure}"
-    }
-
-    exec { 'download-zk-package':
-      command => "/usr/bin/wget -O /tmp/zookeeper-${ensure}.tar.gz ${package_mirror}/zookeeper-${ensure}/zookeeper-${ensure}.tar.gz",
-      creates => "/tmp/zookeeper-${ensure}.tar.gz"
-    }
-
-    exec { 'install-zk-package':
-      command => "/bin/tar -xvzf /tmp/zookeeper-${ensure}.tar.gz -C /opt",
-      creates => "${install_dir}-${ensure}/zookeeper-${ensure}.jar",
-      require => [
-        Exec['download-zk-package']
-      ]
-    }
-    
-    file { "${install_dir}-${ensure}":
-      ensure  => directory,
-      recurse => true,
-      owner   => 'zookeeper',
-      group   => 'zookeeper'
-    }
   }
 
-  group { 'zookeeper':
-    ensure => present,
-    system => true
+  anchor { 'zookeeper::install::end': }
+
+  class { 'zookeeper::post_install':
+    ensure            => $ensure,
+    ensure_account    => $ensure_account,
+    ensure_cron       => $ensure_cron,
+    user              => $user,
+    group             => $group,
+    datastore         => $datastore,
+    snap_retain_count => $snap_retain_count,
+    cleanup_sh        => $cleanup_sh,
+    manual_clean      => $clean,
+    require           => Anchor['zookeeper::install::end'],
   }
 
-  user { 'zookeeper':
-    ensure => present,
-    groups => ['zookeeper'],
-    system => true,
-    home   => $install_dir
-  }
-
-  # if !$cleanup_count, then ensure this cron is absent.
-  if ($snap_retain_count > 0 and $ensure != 'absent') {
-    ensure_packages(['cron'])
-
-    cron { 'zookeeper-cleanup':
-        ensure  => present,
-        command => "${cleanup_sh} ${datastore} ${snap_retain_count}",
-        hour    => 2,
-        minute  => 42,
-        user    => $user,
-        require => Package['zookeeper'],
-    }
-  }
 }
