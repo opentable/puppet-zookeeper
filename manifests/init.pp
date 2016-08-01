@@ -51,9 +51,10 @@ class zookeeper(
   $peer_type               = 'UNSET',
   $start_with              = undef,
   $ensure_cron             = true,
-  $install_method          = package,
+  $install_method          = 'package',
   $install_dir             = '/opt/zookeeper',
-  $download_url            = 'http://mirror.cogentco.com/pub/apache/zookeeper',
+  $mirror_url              = 'http://mirror.cogentco.com/pub/apache',
+  $archive_checksum        = {},
   $service_package         = undef,
   $service_name            = $::zookeeper::params::service_name,
   $service_provider        = $::zookeeper::params::service_provider,
@@ -103,7 +104,8 @@ class zookeeper(
   class { 'zookeeper::install':
     ensure            => $ensure,
     install_method    => $install_method,
-    download_url      => $download_url,
+    mirror_url        => $mirror_url,
+    archive_checksum  => $archive_checksum,
     install_dir       => $install_dir,
     snap_retain_count => $snap_retain_count,
     datastore         => $datastore,
@@ -155,7 +157,7 @@ class zookeeper(
     systemd_unit_after      => $systemd_unit_after,
   }
 
-  if ($manage_service) {
+  if ($manage_service and !$exhibitor_managed) {
     class { 'zookeeper::service':
       cfg_dir             => $cfg_dir,
       zoo_dir             => $zoo_dir,

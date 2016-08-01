@@ -1,17 +1,39 @@
 define zookeeper::znode(
   $ensure = '',
-  $assosiation = ''
+  $association = ''
 ) {
-  
+
+  validate_re($name, '^\/', "znode path must start with a '/'")
+  if $name =~ /\/\.{1,2}(\/.*)?$/ {
+    fail("znode name cannot be '.' or '..'")
+  }
+
+  $create_cmd = shellquote(
+    '/bin/echo',
+    "create ${name}",
+    "\'${association}\'"
+  )
+
+  $rm_cmd = shellquote(
+    '/bin/echo',
+    "rmr ${name}"
+  )
+
   if $ensure == 'present' {
     exec { "create znode ${name}":
-      command => "/bin/echo \"create /${name} '${assosiation}'\" | ${zookeeper::install_dir}/bin/zkCli.sh",
-      unless  => "/bin/bash -c \"if [[ \\\"`echo 'ls /' | /opt/zookeeper/bin/zkCli.sh | tail -n2 | head -n1`\\\" == *${name}* ]]; then exit 0; else exit 1; fi\""
+      command => "${create_cmd} | zkCli.sh",
+      unless  => shellquote('znode_exists.sh', $name),
+      path    => "/usr/share/zookeeper/bin:${zookeeper::install_dir}/bin:/bin:/usr/bin:/usr/local/bin",
+      require => Class['::zookeeper::install'],
+                
     }
   } else {
     exec { "delete znode ${name}":
-      command => "/bin/echo \"rmr /${name}\" | ${zookeeper::install_dir}/bin/zkCli.sh",
-      unless  => "/bin/bash -c \"if [[ \\\"`echo 'ls /' | /opt/zookeeper/bin/zkCli.sh | tail -n2 | head -n1`\\\" == *${name}* ]]; then exit 0; else exit 1; fi\""
+      command => "${rm_cmd} | zkCli.sh",
+      onlyif  => shellquote('znode_exists.sh', $name),
+      path    => "/usr/share/zookeeper/bin:${zookeeper::install_dir}/bin:/bin:/usr/bin:/usr/local/bin",
+      require => Class['::zookeeper::install'],
     }
   }
+
 }
