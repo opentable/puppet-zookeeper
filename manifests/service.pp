@@ -57,4 +57,5 @@ class zookeeper::service(
       File["${cfg_dir}/environment"], File["${cfg_dir}/log4j.properties"],
     ]
   }
+ }
 }
