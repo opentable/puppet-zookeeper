@@ -106,7 +106,7 @@ class zookeeper::config(
     }
   }
 
-  if $exhibitor_manaaged == 'false' {
+  if $exhibitor_managed == 'false' {
     file { "${cfg_dir}/zoo.cfg":
       owner   => $user,
       group   => $group,
