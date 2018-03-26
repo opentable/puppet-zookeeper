@@ -1,0 +1,14 @@
+[Service]
+Environment="ZOOCFGDIR=<%= scope.lookupvar('zookeeper::config::cfg_dir') %>"
+
+# TODO this is really ugly
+# How to find out, which jars are needed?
+# seems, that log4j requires the log4j.properties file to be in the classpath
+Environment="CLASSPATH=$ZOOCFGDIR:/usr/share/java/jline.jar:/usr/share/java/log4j-1.2.jar:/usr/share/java/xercesImpl.jar:/usr/share/java/xmlParserAPIs.jar:/usr/share/java/netty.jar:/usr/share/java/slf4j-api.jar:/usr/share/java/slf4j-log4j12.jar:/usr/share/java/zookeeper.jar"
+
+Environment="ZOO_LOG_DIR=<%= scope.lookupvar('zookeeper::config::log_dir') %>"
+Environment="JAVA=<%= scope.lookupvar('zookeeper::config::java_bin') %>"
+Environment="ZOOMAIN="<%= scope.lookupvar('zookeeper::config::zoo_main') %>"
+Environment="ZOO_LOG4J_PROP=<%= scope.lookupvar('zookeeper::config::log4j_prop') %>"
+Environment="JMXLOCALONLY=false"
+Environment="SERVER_JVMFLAGS=<%= scope.lookupvar('zookeeper::config::java_opts') %>"

@@ -23,7 +23,7 @@ class zookeeper::service(
   if $manage_service == true {
     if $manage_service_file == true {
       if $service_provider == 'systemd'  {
-        file { '/usr/lib/systemd/system/zookeeper.service':
+        file { '/etc/systemd/system/zookeeper.service':
           ensure  => 'present',
           content => template('zookeeper/zookeeper.service.erb'),
           } ~>
@@ -42,20 +42,32 @@ class zookeeper::service(
         }
     }
 
+  if $zookeper::config::exhibitor_managed == 'false' {
+    $require_svc = [
+      Class['::zookeeper::install'],
+      File["${cfg_dir}/zoo.cfg"]
+    ]
+    $subscribe_svc = [
+      File["${cfg_dir}/myid"], File["${cfg_dir}/zoo.cfg"],
+      File["${cfg_dir}/environment"], File["${cfg_dir}/log4j.properties"],
+    ]
+  } else {
+    $require_svc = [
+      Class['::zookeeper::install'],
+    ]
+    $subscribe_svc = [
+      File["${cfg_dir}/environment"], File["${cfg_dir}/log4j.properties"],
+    ]
+  }
+
   service { $service_name:
     ensure     => $service_ensure,
     hasstatus  => true,
     hasrestart => true,
     provider   => $service_provider,
     enable     => true,
-    require    => [
-      Class['::zookeeper::install'],
-      File["${cfg_dir}/zoo.cfg"]
-    ],
-    subscribe  => [
-      File["${cfg_dir}/myid"], File["${cfg_dir}/zoo.cfg"],
-      File["${cfg_dir}/environment"], File["${cfg_dir}/log4j.properties"],
-    ]
+    require    => $require_svc,
+    subscribe  => $subscribe_svc,
   }
  }
 }
