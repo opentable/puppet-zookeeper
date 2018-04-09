@@ -16,8 +16,10 @@ class zookeeper::params {
           }
         }
         'Ubuntu': {
-          case $::majdistrelease {
+          case $::lsbmajdistrelease {
             '14.04': { $initstyle = 'upstart' }
+            '16.04': { $initstyle = 'systemd' }
+            '18.04': { $initstyle = 'systemd' }
             default: { $initstyle = undef }
           }
         }

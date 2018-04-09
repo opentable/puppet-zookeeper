@@ -78,7 +78,7 @@ class zookeeper::install(
     }
 
     exec { 'download-zk-package':
-      command => "/usr/bin/wget -O /tmp/zookeeper-${ensure}.tar.gz ${package_mirror}/zookeeper-${ensure}/zookeeper-${ensure}.tar.gz",
+      command => "/usr/bin/wget -O /tmp/zookeeper-${ensure}.tar.gz ${download_url}/zookeeper-${ensure}/zookeeper-${ensure}.tar.gz",
       creates => "/tmp/zookeeper-${ensure}.tar.gz"
     }
 
@@ -89,7 +89,7 @@ class zookeeper::install(
         Exec['download-zk-package']
       ]
     }
-    
+
     file { "${install_dir}-${ensure}":
       ensure  => directory,
       recurse => true,
