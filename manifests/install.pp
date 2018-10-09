@@ -11,7 +11,7 @@
 #
 class zookeeper::install(
   $install_method    = $zookeeper::install_method,
-  $download_url      = 'http://mirror.cogentco.com/pub/apache/zookeeper',
+  $download_url      = 'http://archive.apache.org/dist/zookeeper/',
   $install_dir       = '/opt/zookeeper',
   $ensure            = present,
   $snap_retain_count = 3,
