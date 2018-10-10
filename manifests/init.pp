@@ -53,7 +53,7 @@ class zookeeper(
   $ensure_cron             = true,
   $install_method          = package,
   $install_dir             = '/opt/zookeeper',
-  $download_url            = 'http://mirror.cogentco.com/pub/apache/zookeeper',
+  $download_url            = 'http://archive.apache.org/dist/zookeeper/',
   $service_package         = undef,
   $service_name            = $::zookeeper::params::service_name,
   $service_provider        = $::zookeeper::params::service_provider,
